@@ -1,0 +1,58 @@
+<html>
+	<head>
+		<title>Mafia Game Chat!</title>
+		<link rel="stylesheet" type="text/css" href="../../static/chatsystem.css" />
+		<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			var socket;
+		  	$(document).ready(function(){
+		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+		  		socket.on('connect', function() {
+                    socket.emit('joined', {});
+                });
+                socket.on('status', function(data)
+                {
+                	$('#chatbox').append('<b>'+data.message+'</b><br>');
+                })
+		  		socket.on('text', function(data){
+		  			$('#chatbox').append(data.username+': '+data.message+'<br>');
+		  			$("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
+		  		})
+		  		$('#textmessage').keypress(function(e) {
+                    if (e.keyCode == 13) {
+                        sendMessage(document.getElementById('textmessage').value)
+                        e.preventDefault();
+                    }
+
+                });  
+		  	})
+		  	function sendMessage(message)
+		  	{
+		  		if(message.length > 0)
+		  		{
+			  		//Send message to the server
+			  		text = $('#textmessage').val();
+	                $('#textmessage').val('');
+	                socket.emit('text', {'message': message});
+            	}
+		  	};
+		</script>
+	</head>
+	<body>
+		<div id="chatboxsystem">
+			<h1>Welcome to the Mafia!</h1>
+			<div id="chatbox">
+   				<legend>Welcome to the Mafia Chat!</legend><br>
+			</div>
+			<form id="sendMessageForm">
+				<input type="text" id="textmessage" maxlength=100 placeholder="type your message..."/>
+				<input type="button" value="Send" class="btn" id="btnSend" onclick="sendMessage(document.getElementById('textmessage').value);"/><br>
+			</form>
+			<div id="users">
+				<p>Online Users:</p>
+				<p>Deep because he always on</p>
+			</div>
+		</div>
+	</body>
+</html>

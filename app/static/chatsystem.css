@@ -1,0 +1,70 @@
+#chatboxsystem {
+	position:fixed;
+	width:70%;
+ 	height:90%;
+ 	background-color: rgb(255,140,0);
+ 	color: white;
+ 	text-align: center;
+ }
+
+#chatbox{
+	left: 1%;
+	padding: 1%;
+	position: fixed;
+	width:50%;
+	height:70%;
+	background-color: red;
+	text-align: left;
+	overflow-y: auto;
+	word-wrap: break-word;
+	border: 5px solid #9D0004;
+}
+
+body{
+	padding: 0;
+	margin: 0;
+}
+
+#sendMessageForm{
+	opacity: 0.6;
+	text-align: left;
+	left:1.5%;
+	position: fixed;
+	background-color: transparent;
+	top:82%;
+	width:55%;
+}
+
+#txtmessage{;
+	padding: 0;
+	width: 81.7%;
+	color: red;
+}
+
+#btnSend{
+	padding: 0;
+	width: 10%;
+}
+
+p{
+	padding: 0;
+	margin: 0;
+	word-wrap:break-word
+}
+
+legend{
+	padding: 0;
+	margin: 0;
+}
+
+#users{
+	position: relative;
+	left: 78%;
+	padding: 0;
+	margin: 0;
+	width: 20%;
+	height: 82.3%;
+	background-color: green;
+	overflow-y: auto;
+	border: 5px solid #036C00;
+}
