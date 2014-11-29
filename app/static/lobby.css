@@ -1,23 +1,23 @@
-#chatboxsystem {
+#gameListSystem {
 	position:fixed;
 	width:70%;
  	height:90%;
- 	background-color: rgb(255,140,0);
+ 	background-color: rgb(140,140,140);
  	color: white;
  	text-align: center;
  }
 
-#chatbox{
+#gameBox{
 	left: 1%;
 	padding: 1%;
 	position: fixed;
-	width:50%;
-	height:65%;
-	background-color: red;
+	width:43%;
+	height:70%;
+	background-color: blue;
 	text-align: left;
 	overflow-y: auto;
 	word-wrap: break-word;
-	border: 5px solid #9D0004;
+	border: 5px solid #0000CC;
 }
 
 body{
@@ -26,25 +26,31 @@ body{
 	font-size: 16px;
 }
 
-#sendMessageForm{
-	opacity: 0.6;
+#createGameForm{
 	text-align: left;
-	left:1%;
+	
 	position: fixed;
 	background-color: transparent;
-	top:85%;
 	width:57%;
 }
 
-#txtmessage{;
+#errorBox{
+	color:red;
+}
+#name{;
 	padding: 0;
-	width: 81.7%;
+	width: 30%;
+	color: red;
+}
+#numplayers{;
+	padding: 0;
+	width: 10%;
 	color: red;
 }
 
 #btnSend{
 	padding: 0;
-	width: 10%;
+	width: 20%;
 }
 
 p{
@@ -58,14 +64,13 @@ legend{
 	margin: 0;
 }
 
-#users{
+#createGameBox{
 	position: relative;
-	text-align: center;
-	left: 78%;
-	padding: 0;
+	left: 68%;
+	padding: 1%;
 	margin: 0;
-	width: 20%;
-	height: 82.3%;
+	width: 28%;
+	height: 79%;
 	background-color: green;
 	overflow-y: auto;
 	border: 5px solid #036C00;

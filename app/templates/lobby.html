@@ -1,0 +1,74 @@
+<html>
+	<head>
+		<title>Mafia Game Lobby!</title>
+		<link rel="stylesheet" type="text/css" href="../../static/lobby.css"/>
+		<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			var socket;
+		  	$(document).ready(function(){
+		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/lobby');
+		  		socket.on('connect', function() {
+                    socket.emit('joined',{});
+                });
+		  		socket.on('clear list', function(){ 
+		  			$('#gameList').empty();
+		  		})
+		  		socket.on('show game', function(game) { 
+		  			$('#gameList').append("<div>"+game['name']+"</div>")
+		  		});
+		  		socket.on('game creation errors', function(errors)
+		  		{
+		  			$('#errorBox').empty()
+		  			if(errors.length > 0)$('#errorBox').append("<b>Error(s) creating game:</b><br>")
+		  			for(message in errors)
+		  			{
+
+		  				$('#errorBox').append(errors[message] + "<br>")
+		  			}
+		  		})
+                document.getElementById('btnSend').addEventListener('click', createGame, false);
+		  	})
+		  	function createGame()
+		  	{
+		  		var game = new Object();
+		  		
+		  		var data = {'name':$('#name').val(),'maxPlayers':$('#numplayers').val()}
+
+		  		socket.emit('create game', data)
+		  		$('#numplayers').val('')
+		  		$('#name').val('')
+		  	}
+		  	
+		</script>
+	</head>
+	<body>
+		<div id="gameListSystem">
+			<h1>Welcome to the lobby!</h1>
+			<div id="gameBox">
+   				<b>Games!</b><br><br>
+   				<div id="gameList">
+   				
+   				</div>
+			</div>
+
+			<div id = "createGameBox">
+				<b>Create a game!</b><br><br>
+				<form id="createGameForm">
+					<p><input type="text" id="name" maxlength=30 placeholder="name of the game"/></p>
+					<p><input type="number" id="numplayers" maxlength=2 placeholder="max. players"/></p>
+					<p><input type="button" id="btnSend" value="Create Game" class="btn"/></p>
+					<div id = "errorBox">
+						
+					</div>
+				</form>
+			</div>
+			<!--
+			<div id="users">
+				<p>Online Users:</p>
+				<p>Deep because he always on</p>
+			</div>
+			-->
+		</div>
+	</body>
+</html>

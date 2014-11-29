@@ -1,15 +1,19 @@
 <html>
 	<head>
 		<title>Mafia Game Chat!</title>
-		<link rel="stylesheet" type="text/css" href="../../static/chatsystem.css" />
+		<link rel="stylesheet" type="text/css" href="../../static/chatsystem.css"/>
 		<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-		<script type="text/javascript" charset="utf-8">
+		<script language="javascript" type="text/javascript" charset="utf-8">
 			var socket;
 		  	$(document).ready(function(){
 		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
 		  		socket.on('connect', function() {
-                    socket.emit('joined', {});
+                    socket.emit('joined',{});
+                });
+                socket.on('disconnect', function() {
+                	console.log('left')
+                    socket.emit('left',{});
                 });
                 socket.on('status', function(data)
                 {
@@ -24,8 +28,7 @@
                         sendMessage(document.getElementById('textmessage').value)
                         e.preventDefault();
                     }
-
-                });  
+                }); 
 		  	})
 		  	function sendMessage(message)
 		  	{
