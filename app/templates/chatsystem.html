@@ -6,15 +6,15 @@
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
 		<script language="javascript" type="text/javascript" charset="utf-8">
 			var socket;
+			var gameName = "{{ name }}"
 		  	$(document).ready(function(){
 		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
 		  		socket.on('connect', function() {
-                    socket.emit('joined',{});
+                    socket.emit('joined',{'name':gameName});
                 });
-                socket.on('disconnect', function() {
-                	console.log('left')
-                    socket.emit('left',{});
-                });
+                socket.on("disconnect", function(){
+			        console.log("client disconnected from server");
+			    });
                 socket.on('status', function(data)
                 {
                 	$('#chatbox').append('<b>'+data.message+'</b><br>');

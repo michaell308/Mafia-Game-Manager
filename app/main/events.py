@@ -32,25 +32,35 @@ def create_game(data):
     game = Game(data['name'], int(data['maxPlayers']))
 
     games.append(game)
-    emit('clear list', room=room)
-    for i in games:
-        emit('show game', i.serialize(), room=room)
+    update_lobby_list()
 
 @socketio.on('joined', namespace='/lobby')
 def joined_lobby(data):
+    """When a client just joins the lobby"""
     room = lobby_room
     join_room(room)
     session['room'] = room
-    emit('clear list', room=room)
+    update_lobby_list()
+
+@socketio.on('join game', namespace='/lobby')
+def join_game(data):
+    if data['name'] in games:
+        games[data['name']].addPlayer(Player())
+        emit('join game', {'name': data['name']})
+        join_room(data['name'])
+        session['room'] = data['name']
+        update_lobby_list()
+
+def update_lobby_list():
+    emit('clear list', room=lobby_room)
     for i in games:
-        emit('show game', i.serialize(), room=room)
-
-
+        emit('show game', games[i].serialize(), room=lobby_room)
 
 @socketio.on('joined', namespace='/chat')
 def joined(data):
     """Sent by clients when they enter a room. A status message is broadcast to all people in the room."""
-    join_room(rooms[0])
+    join_room(data['name'])
+    session['room'] = data['name']
     emit('status', {'message': name + ' has joined the room.'}, session.get('room'))
 
 @socketio.on('text', namespace='/chat')
@@ -61,9 +71,10 @@ def text(data):
     messages.append(message_data)
     emit('text', message_data , room=room)
 
-@socketio.on('left')
+@socketio.on('left', namespace='/chat')
 def left(data):
     """Sent by clients when they leave a room. A status message is broadcast to all people in the room."""
+    print "disconnect"
     room = session.get('room')
     leave_room(room)
     emit('status', {'message': name + ' has left the room.'}, room=room)

@@ -15,8 +15,16 @@
 		  			$('#gameList').empty();
 		  		})
 		  		socket.on('show game', function(game) { 
-		  			$('#gameList').append("<div>"+game['name']+"</div>")
+		  			var elementID = "game: " + game['name']
+		  			$('#gameList').append("<div id=\"" + elementID + "\">"+game['name']+ " (" + game['num_players'] + "/" + game['maxPlayers'] + ")</div>")
+		  			document.getElementById(elementID).addEventListener('dblclick', function(event){
+		  				socket.emit('join game', {'name':idToName(event.target.getAttribute('id'))})
+					}, false);
 		  		});
+		  		socket.on('join game', function(data){
+		  			$(location).attr('href','http://' + document.domain + ':' + location.port + '/game/' + data['name']);
+		  			console.log(data['name'])
+		  		})
 		  		socket.on('game creation errors', function(errors)
 		  		{
 		  			$('#errorBox').empty()
@@ -28,7 +36,12 @@
 		  			}
 		  		})
                 document.getElementById('btnSend').addEventListener('click', createGame, false);
+                document.getElementById('gameBox').onselectstart = function() { return false; };
 		  	})
+			function idToName(id)
+			{
+				return id.substring(6);
+			}
 		  	function createGame()
 		  	{
 		  		var game = new Object();
