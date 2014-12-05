@@ -19,11 +19,14 @@ def create_game(data):
     errors = [];
 
     #error checking
+    print 
+
     if len(data['name']) < 1: errors.append("Name too short")
     if len(data['maxPlayers']) < 1 or not str(data['maxPlayers']).isdigit() or int(data['maxPlayers']) > 99: errors.append("Invalid max. number of players")
     if len(games) >= 10: errors.append("Lobby is full")
-    for g in games: 
-        if g.name == data['name']: errors.append("Name already taken")
+    #for g in games: 
+    #    if data['name'] == g.name: 
+    #        errors.append("Name already taken")
 
     
     emit('game creation errors', errors)
@@ -31,7 +34,7 @@ def create_game(data):
 
     game = Game(data['name'], int(data['maxPlayers']))
 
-    games.append(game)
+    games[data['name']] = game
     update_lobby_list()
 
 @socketio.on('joined', namespace='/lobby')
@@ -61,7 +64,7 @@ def joined(data):
     """Sent by clients when they enter a room. A status message is broadcast to all people in the room."""
     join_room(data['name'])
     session['room'] = data['name']
-    emit('status', {'message': name + ' has joined the room.'}, session.get('room'))
+    emit('status', {'message': name + ' has joined the room.'}, room=session.get('room'))
 
 @socketio.on('text', namespace='/chat')
 def text(data):
@@ -71,7 +74,7 @@ def text(data):
     messages.append(message_data)
     emit('text', message_data , room=room)
 
-@socketio.on('left', namespace='/chat')
+@socketio.on('disconnect', namespace='/chat')
 def left(data):
     """Sent by clients when they leave a room. A status message is broadcast to all people in the room."""
     print "disconnect"

@@ -1,8 +1,13 @@
 <html>
 	<head>
 		<title>Mafia Game Lobby!</title>
-		<link rel="stylesheet" type="text/css" href="../../static/lobby.css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+		<!--<link rel="stylesheet" type="text/css" href="../../static/css/lobby.css"/>-->
+		<link href="../../static/css/bootstrap.min.css" rel="stylesheet">
+		<link href="../../static/css/2-col-portfolio.css" rel="stylesheet">
 		<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
 		<script type="text/javascript" charset="utf-8">
 			var socket;
@@ -56,32 +61,40 @@
 		</script>
 	</head>
 	<body>
-		<div id="gameListSystem">
-			<h1>Welcome to the lobby!</h1>
-			<div id="gameBox">
-   				<b>Games!</b><br><br>
-   				<div id="gameList">
-   				
-   				</div>
-			</div>
+		<div class="container">
+			<div class="row">
+	            <div class="col-lg-12">
+	                <h1 class="page-header">Lobby
+	                    <small>Create or Join a Game</small>
+	                </h1>
+	            </div>
+	        </div>
+			<div id="gameListSystem">
+				<div id="gameBox">
+	   				<b>Games!</b><br><br>
+	   				<div id="gameList">
+	  					
+	   				</div>
+				</div>
 
-			<div id = "createGameBox">
-				<b>Create a game!</b><br><br>
-				<form id="createGameForm">
-					<p><input type="text" id="name" maxlength=30 placeholder="name of the game"/></p>
-					<p><input type="number" id="numplayers" maxlength=2 placeholder="max. players"/></p>
-					<p><input type="button" id="btnSend" value="Create Game" class="btn"/></p>
-					<div id = "errorBox">
-						
-					</div>
-				</form>
+				<div id = "createGameBox">
+					<b>Create a game!</b><br><br>
+					<form id="createGameForm">
+						<p><input type="text" id="name" maxlength=30 placeholder="name of the game"/></p>
+						<p><input type="number" id="numplayers" maxlength=2 placeholder="max. players"/></p>
+						<p><input type="button" class="btn btn-primary btn-success" id="btnSend" value="Create Game" class="btn"/></p>
+						<div id = "errorBox">
+							
+						</div>
+					</form>
+				</div>
+				<!--
+				<div id="users">
+					<p>Online Users:</p>
+					<p>Deep because he always on</p>
+				</div>
+				-->
 			</div>
-			<!--
-			<div id="users">
-				<p>Online Users:</p>
-				<p>Deep because he always on</p>
-			</div>
-			-->
 		</div>
 	</body>
 </html>
