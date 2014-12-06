@@ -6,30 +6,39 @@
 		<!--<link rel="stylesheet" type="text/css" href="../../static/css/lobby.css"/>-->
 		<link href="../../static/css/bootstrap.min.css" rel="stylesheet">
 		<link href="../../static/css/2-col-portfolio.css" rel="stylesheet">
-		<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-		<script src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../../static/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
 		<script type="text/javascript" charset="utf-8">
 			var socket;
 		  	$(document).ready(function(){
 		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/lobby');
+		  		//io.set("close timeout", 3);
 		  		socket.on('connect', function() {
                     socket.emit('joined',{});
                 });
-		  		socket.on('clear list', function(){ 
-		  			$('#gameList').empty();
-		  		})
-		  		socket.on('show game', function(game) { 
-		  			var elementID = "game: " + game['name']
-		  			$('#gameList').append("<div id=\"" + elementID + "\">"+game['name']+ " (" + game['num_players'] + "/" + game['maxPlayers'] + ")</div>")
-		  			document.getElementById(elementID).addEventListener('dblclick', function(event){
-		  				socket.emit('join game', {'name':idToName(event.target.getAttribute('id'))})
-					}, false);
+
+		  		socket.on('list games', function(games) {
+		  			$('#gameList').empty()
+		  			$('#gameList').append("<thead><tr><th>Game Type</th><th>Room Name</th><th># Of Players</th></tr></thead>")
+		  			$('#gameList').append("<tbody>")
+		  			games = JSON.parse(games)
+		  			for (i in games){
+		  				var game = games[i]
+		  				var elementID = "game: " + game['name']
+		  				$('#gameList').append("<tr class='clickableRow'><td>Default</td><td class=gameName>"+game['name']+ "</td><td>" + game['numPlayers'] + "/" + game['maxPlayers'] + "</td></tr>")
+		  			}
+		  			$('#gameList').append("</tbody>")
+
+		  			$('.clickableRow').click(function() {
+		  				socket.emit('join game', {'name':this.getElementsByClassName('gameName')[0].innerHTML})
+			        })
 		  		});
+
 		  		socket.on('join game', function(data){
 		  			$(location).attr('href','http://' + document.domain + ':' + location.port + '/game/' + data['name']);
-		  			console.log(data['name'])
-		  		})
+		  		});
+
 		  		socket.on('game creation errors', function(errors)
 		  		{
 		  			$('#errorBox').empty()
@@ -62,38 +71,54 @@
 	</head>
 	<body>
 		<div class="container">
+		
 			<div class="row">
+				Welcome, {{name}}!
 	            <div class="col-lg-12">
 	                <h1 class="page-header">Lobby
 	                    <small>Create or Join a Game</small>
 	                </h1>
 	            </div>
 	        </div>
-			<div id="gameListSystem">
-				<div id="gameBox">
-	   				<b>Games!</b><br><br>
-	   				<div id="gameList">
-	  					
-	   				</div>
-				</div>
+			<div id="gameListSystem" >
+				
+				<div class="panel panel-default" id="panel2">
+				    <div class="panel-heading">
+				        <h4 class="panel-title">
+				            <a data-toggle="collapse" data-target="#gameListPanel" href="#gameListPanel">Games</a>
+				        </h4>
+				    </div>
+				    <div id="gameListPanel" class="panel-collapse collapse in">
+				        <div id="gameBox" class = "panel-body">
+		   					<div style="width:100%;height:250px;line-height:3em;overflow:scroll;padding:5px;" id ="gameListWrapper">
+		                    
+		                    	<table class="table table-striped" id="gameList" >
 
-				<div id = "createGameBox">
-					<b>Create a game!</b><br><br>
-					<form id="createGameForm">
-						<p><input type="text" id="name" maxlength=30 placeholder="name of the game"/></p>
-						<p><input type="number" id="numplayers" maxlength=2 placeholder="max. players"/></p>
-						<p><input type="button" class="btn btn-primary btn-success" id="btnSend" value="Create Game" class="btn"/></p>
-						<div id = "errorBox">
-							
-						</div>
-					</form>
+		                    	</table>
+			                </div>
+	                    </div>
+					</div>    
 				</div>
-				<!--
-				<div id="users">
-					<p>Online Users:</p>
-					<p>Deep because he always on</p>
+				
+				<div class="panel panel-default" id="panel1">
+				    <div class="panel-heading">
+				        <h4 class="panel-title">
+				            <a data-toggle="collapse" data-target="#createGamePanel" href="#createGamePanel">Create a Game</a>
+				        </h4>
+				    </div>
+				    <div id="createGamePanel" class="panel-collapse collapse in">
+				        <div class="panel-body">
+				         	<form id="createGameForm" class="panel-body">
+								<p><input type="text" id="name" maxlength=30 placeholder="name of the game"/></p>
+								<p><input type="number" id="numplayers" maxlength=2 placeholder="max. players"/></p>
+								<p><input type="button" class="btn btn-primary btn-success" id="btnSend" value="Create Game" class="btn"/></p>
+								<div id = "errorBox">
+									
+								</div>
+							</form>
+				        </div>
+				    </div>
 				</div>
-				-->
 			</div>
 		</div>
 	</body>

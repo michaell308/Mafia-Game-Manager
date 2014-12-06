@@ -7,12 +7,14 @@
 		<script language="javascript" type="text/javascript" charset="utf-8">
 			var socket;
 			var gameName = "{{ name }}"
-		  	$(document).ready(function(){
+		  	$(document).ready(function() {
 		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
 		  		socket.on('connect', function() {
                     socket.emit('joined',{'name':gameName});
                 });
-               
+               	socket.on('disconnect', function() {
+               		socket.emit('disconnected');
+               	})
                 socket.on('status', function(data)
                 {
                 	$('#chatbox').append('<b>'+data.message+'</b><br>');
@@ -26,7 +28,17 @@
                         sendMessage(document.getElementById('textmessage').value)
                         e.preventDefault();
                     }
-                }); 
+                });
+                socket.on('list players', function(data)
+                {
+                	data = JSON.parse(data)
+                	$('#users').empty()
+                	for (i in data)
+                	{
+                		var readyString = (data[i].ready=='True') ? 'Ready!':'Not ready'
+                		$('#users').append("<div class='clickablePlayer'>"+data[i]['username'] + ' (' + readyString + ')</div>')
+                	}
+                })
 		  	})
 		  	function sendMessage(message)
 		  	{
@@ -38,6 +50,11 @@
 	                socket.emit('text', {'message': message});
             	}
 		  	};
+		  	function toggleReady()
+		  	{
+		  		console.log("asdfsda")
+		  		socket.emit('toggle ready')
+		  	}
 		</script>
 	</head>
 	<body>
@@ -52,8 +69,8 @@
 			</form>
 			<div id="users">
 				<p>Online Users:</p>
-				<p>Deep because he always on</p>
 			</div>
+			<input type="button" value="Ready" class="btn" id="btnReady" onclick="toggleReady();"/><br>
 		</div>
 	</body>
 </html>
