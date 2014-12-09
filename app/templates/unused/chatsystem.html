@@ -36,8 +36,12 @@
                 	for (i in data)
                 	{
                 		var readyString = (data[i].ready=='True') ? 'Ready!':'Not ready'
-                		$('#users').append("<div class='clickablePlayer'>"+data[i]['username'] + ' (' + readyString + ')</div>')
+                		$('#users').append("<div class='clickablePlayer'>"+data[i]['username'] + ' (' + readyString + ') ' +data[i]['role']+ '</div>')
                 	}
+                });
+                socket.on('game data', function(data)
+                {
+                	console.log("penis")
                 })
 		  	})
 		  	function sendMessage(message)
@@ -52,7 +56,6 @@
 		  	};
 		  	function toggleReady()
 		  	{
-		  		console.log("asdfsda")
 		  		socket.emit('toggle ready')
 		  	}
 		</script>

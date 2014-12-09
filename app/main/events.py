@@ -8,11 +8,7 @@ import json
 import uuid
 from routes import *
 
-messages = []
-name = 'Derp'
-rooms = ['default']
 lobby_room = 'lobby string. needs to be long so no conflict with user created rooms :3'
-
 
 @socketio.on('create game', namespace='/lobby')
 def create_game(data):
@@ -40,7 +36,6 @@ def create_game(data):
 
     add_game(game)
     update_lobby_list()
-    
 
 @socketio.on('joined', namespace='/lobby')
 def joined_lobby(data):
@@ -50,26 +45,8 @@ def joined_lobby(data):
     update_session()
     update_lobby_list()
 
-@socketio.on('join game', namespace='/lobby')
-def join_game(data):
-    if data['name'] in games:
-        game = games[data['name']]
-        
-        if game.num_players > game.max_players: return
-        for i in game.players:
-            if session['token'] == i.token:return
-        
-        game.add_player(Player(session.get('token'), session.get('username')))
-        emit('join game', {'name': data['name']})
-        join_room(data['name'])
-        session['room'] = data['name']
-        update_session()
-        update_lobby_list()
-        
-
-
 @socketio.on('disconnect', namespace='/lobby')
-def left():
+def left_lobby():
     """Sent by clients when they leave a room. A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
@@ -80,54 +57,99 @@ def left():
 @socketio.on('joined', namespace='/chat')
 def joined(data):
     """Sent by clients when they enter a room. A status message is broadcast to all people in the room."""
+    print "player join detected"
+    game = games[data['name']]
+    if game.num_players > game.max_players: return
+    
+
+    if not game.get_player(session.get('token')):
+        emit('join game', {'name': data['name']})
+        emit('status', {'message': username(session['token']) + ' has joined the room.'}, room=session.get('room'))
+        game.add_player(Player(session.get('token')))
+
     join_room(data['name'])
     session['room'] = data['name']
     update_session()
-    emit('status', {'message': session['username'] + ' has joined the room.'}, room=session.get('room'))
-    update_player_list(games[session.get('room')], session.get('room'))
+    
+    update_game(session.get('room'))
+    update_lobby_list()
 
 
 @socketio.on('text', namespace='/chat')
 def text(data):
     """Sent by a client when the user entered a new message. The message is sent to all people in the room."""
     room = session.get('room')
-    message_data = {'username': session.get('username'), 'message':data['message']}
-    messages.append(message_data)
+    if games[session['token']].get_player(session['token']).role != 'Mafioso' and games[session['token']].phase == 'NIGHT': return
+    message_data = {'username': username(session['token']) , 'message':data['message']}
     emit('text', message_data , room=room)
 
-@socketio.on('disconnect', namespace='/chat')
-def left():
+@socketio.on('leave', namespace='/chat')
+def left_chat():
     """Sent by clients when they leave a room. A status message is broadcast to all people in the room."""
     print "player disconnect just detected"
-    game = games[room]
     room = session.get('room')
-    for player in game.players:
-        if player.token == session['token']:
-            game.remove_player(player)
-
+    game = games[room]
+    
+    if game.phase == 'PREP':
+        for player in game.players:
+            if player.token == session['token']:
+                game.remove_player(player)
     update_lobby_list()
-    update_player_list(game, session['room'])
+    update_game(session['room'])
+
 
     leave_room(room)
     update_session()
-    emit('status', {'message': session['username'] + ' has left the room.'}, room=room)
+    emit('status', {'message': username(session['token'])  + ' has left the room.'}, room=room)
     
     disconnect(session['token'])
+    update_lobby_list()
 
 @socketio.on('toggle ready', namespace='/chat')
 def player_ready():
     game = games[session['room']]
-    player = game.get_player(session['username'])
-    player.ready = not player.ready
-    update_player_list(game, session['room'])
-    if game.everyone_ready(): print "ready!"
+    if (game.phase == 'PREP'):
+        player = game.get_player(session['token'])
+        player.ready = not player.ready
+        if game.everyone_ready():
+            game.start_game()
+        update_game(session['room'])
+    #threading.Timer(1, main_loop).start()
+
+@socketio.on('update game', namespace='/chat')
+def update_game():
+    game = games[session['room']]
+    emit('game data', game.serialize())
+
+@socketio.on('toggle vote', namespace='/chat')
+def toggle_vote(data):
+    name = data['name']
+    game = games[session['room']]
+    player = game.get_player(session['token'])
+    target_player = game.get_player_by_username(name)
+    if player.voted_for == player.username:
+        player.voted_for = ''
+        target_player.votes -= 1
+    else:
+        player.voted_for = name
+        target_player.votes += 1
+    total_voting_power = len(game.players)
+    if target_player.votes > total_voting_power/2:
+        if game.phase == 'DISCUSSION':
+            game.start_trial(target_player.token)
+        elif game.phase == 'TRIAL':
+            game.players.remove(target_player)
+            emit('status', {'message': target_player.username + ' has been lynched.'}, room=session.get('room'))
+
+    update_game(session['room'])
 
 def update_session():
     session.modified = True
-    app.save_session(session,make_response("20.14159 horse sized ducks"))
+    app.save_session(session,make_response("42.14159 horse sized ducks"))
 
 def update_lobby_list():
-    emit('list games', json.dumps([games[i].serialize() for i in games]), room = lobby_room)
+    emit('list games', json.dumps([games[i].serialize() for i in games]), room = lobby_room, namespace='/lobby')
 
-def update_player_list(game, room):
-    emit('list players', json.dumps(game.list_players()), room=room)
+def update_game(room):
+    emit('update game', json.dumps({'game':games[room].serialize(),'players':games[room].list_players(),'username':username(session.get('token'))}), room=room)
+

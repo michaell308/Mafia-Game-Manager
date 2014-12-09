@@ -1,0 +1,284 @@
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Mafia</title>
+
+    <!-- Bootstrap Core CSS -->
+
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="../static/css/game.css" rel="stylesheet">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">PlayMafia</a>
+            </div>
+            <!-- /.navbar-header -->
+
+        </nav>
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+        <script language="javascript" type="text/javascript" charset="utf-8">
+            var socket;
+            var gameName = "{{ name }}"
+            var timeLeft = -100;
+            $(document).ready(function() {
+                socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+                socket.on('connect', function() {
+                    socket.emit('joined',{'name':gameName});
+                });
+                socket.on('disconnect', function() {
+                    socket.emit('disconnected');
+                })
+                socket.on('status', function(data)
+                {
+                    $('#chatbox').append('<b>'+data.message+'</b><br>');
+                })
+                socket.on('text', function(data){
+                    $('#chatbox').append(data.username+': '+data.message+'<br>');
+                    $("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
+                })
+                $('#textmessage').keypress(function(e) {
+                    if (e.keyCode == 13) {
+                        sendMessage(document.getElementById('textmessage').value)
+                        e.preventDefault();
+                    }
+                });
+                socket.on('update game', function(data)
+                {
+                    var buttonText = '';
+                    var readyString = ' ';
+                    var roleString = '';
+                    var phaseString = '';
+                    var votesString = '';
+                    var votedForString = '';
+                    data = JSON.parse(data)
+
+                    players = data['players']
+                    game = data['game']
+                    username = data['username']
+
+
+                    if (game['phase'] == 'PREP')
+                    {
+                        timeLeft = -1337
+                        buttonText = 'Toggle Ready'
+                        phaseString = 'Waiting for players ...'
+                    }else{
+                        timeLeft = game['timeLeft']
+                        if(game['phase'] == 'DISCUSSION')
+                        {
+
+                            buttonText = 'Vote'
+                            phaseString = 'Day: Chat away!'
+                        }
+                        else if(game['phase'] == 'TRIAL')
+                        {
+                            buttonText = 'Lynch'
+                            phaseString = 'Should we lynch '+ game['trialUser'] +'?' 
+                        } 
+                        else if(game['phase'] == 'NIGHT')
+                        {
+                            buttonText = 'Test'
+                            phaseString = 'Night: Beware of the Mafia!'
+                        }
+                    }
+                    $('#phase').html(phaseString);
+                    $('#users').empty();
+                    for (i in players)
+                    {
+
+                        roleString = players[i]['role']
+                        if(game['phase'] == 'DISCUSSION'){
+                            votesString = 'Votes: '+players[i]['votes']+', '
+                            votedForString = 'Voted for: '+ ((players[i]['votedFor'].length > 0)?(players[i]['votedFor']):('----'))
+                        } else if (game['phase'] == 'TRIAL') {
+                            
+                        }
+                        if(game['phase'] == 'PREP') readyString = ' (' + ((players[i].ready=='True') ? 'Ready!':'Not ready') + ')'
+                        var content = '<div class="list-group-item"><span class="player-text">' + players[i]['username'] + 
+                                        '</span><span class="row-text">' + votesString + readyString + votedForString+"</span>";
+                        if (game['phase'] == 'PREP') {
+                            if (username == players[i]['username']) {
+                                content += '<button type="button" class="btn btn-primary btn-success pull-right" onClick="toggleReady();">Ready</button>'
+                            }
+                        } else if (game['phase'] == 'DISCUSSION') {
+                            //if (username == players[i]['username']) {
+                                content += '<button type="button" class="btn btn-primary btn-success pull-right voteBtn">Vote</button>'
+                            //}
+                        } else if(game['phase'] == 'TRIAL') {
+                            if (players[i]['username'] == username)
+                                content += '<button type="button" class="btn btn-primary btn-success pull-right voteBtn">Lynch</button>'
+                        }
+                        content += '</div>'
+                        $('#users').append(content);
+                    }
+
+                    $('.voteBtn').click(function() {
+                        var name = this.parentNode.getElementsByClassName('player-text')[0].innerHTML
+                        socket.emit('toggle vote', {'name':name})
+                    })
+                });
+                window.onbeforeunload = function (e) {
+                    socket.emit('leave')
+                }
+                var tick = setInterval(function(){
+                    $('#time-left').empty()
+                    if (timeLeft == -1337) {
+                        $('#time-left').html("--:--")
+                    } else if (timeLeft >= 0) {
+                        timeLeft = Math.max(0,timeLeft - 1)
+                        $('#time-left').html(addLeadingZeroes(String(Math.floor(timeLeft/60))) + ':'+  addLeadingZeroes(String(Math.floor(timeLeft%60))));
+                    }
+                }, 1000);
+            })
+            function addLeadingZeroes(text)
+            {
+                if(text.length == 1)return "0" + text;
+                if(text.length == 0)return "00";
+                return text;
+            }
+            function sendMessage(message)
+            {
+                if(message.length > 0)
+                {
+                    //Send message to the server
+                    text = $('#textmessage').val();
+                    $('#textmessage').val('');
+                    socket.emit('text', {'message': message});
+                }
+            };
+            function toggleReady()
+            {
+                socket.emit('toggle ready')
+            }
+        </script>
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">{{name}}</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-2 col-md-6">
+                    <div class="panel panel-blue">
+                        <div class="panel-heading">
+                            Game State
+                        </div>
+                        <div class="panel-footer">
+                            <div id="time-left" class="huge">--:--</div>
+                            <div id="phase">Waiting for players</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-green">
+                        <div class="panel-heading">
+                            Other Stuff
+                        </div>
+                            <div class="small-body">
+                                <span class="pull-left"></span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-yellow">
+                        <div class="panel-heading">
+                        </div>
+                        <a href="#">
+                            <div class="small-body">
+                                <span class="pull-left"></span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-red">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#">
+                            <div class="small-body">
+                                <span class="pull-left"></span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Game Chat</div>
+                        <div class="panel-body" id="chatbox" style="height:400px">
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="textmessage">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" onclick="sendMessage(document.getElementById('textmessage').value);">Send</button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
+                <!-- /.col-lg-8 -->
+                <div class="col-lg-5">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Players</div>
+                        <div class="panel-body" id="users" style="height:400px"f>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- /.col-lg-4 -->
+            </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+
+</body>
+
+</html>
