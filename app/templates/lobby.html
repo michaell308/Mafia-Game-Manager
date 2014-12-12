@@ -11,7 +11,7 @@
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
 		<script type="text/javascript" charset="utf-8">
 			var socket;
-		  	$(document).ready(function(){
+		  	$(document).ready(function() {
 		  		socket = io.connect('http://' + document.domain + ':' + location.port + '/lobby');
 		  		//io.set("close timeout", 3);
 		  		socket.on('connect', function() {
@@ -23,7 +23,7 @@
 		  			$('#gameList').append("<thead><tr><th>Game Type</th><th>Room Name</th><th># Of Players</th></tr></thead>")
 		  			$('#gameList').append("<tbody>")
 		  			games = JSON.parse(games)
-		  			for (i in games){
+		  			for (i in games) {
 		  				var game = games[i]
 		  				var elementID = "game: " + game['name']
 		  				$('#gameList').append("<tr class='clickableRow'><td>Default</td><td class=gameName>"+game['name']+ "</td><td>" + game['numPlayers'] + "/" + game['maxPlayers'] + "</td></tr>")

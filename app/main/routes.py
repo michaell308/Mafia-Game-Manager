@@ -42,7 +42,7 @@ def game(name):
 	if not name in games:return "This room does not exist, sorry!"
 	if games[name].num_players >= games[name].max_players: return "Room full, sorry!"
 	if not games[name].get_player(session['token']) and games[name].phase != 'PREP': return "The game is already in progress, sorry!"
-	return render_template('game.html', name=name)
+	return render_template('game.html', name=name, username=username(session['token']))
 
 @main.route('/login', methods=['GET','POST'])
 def login():

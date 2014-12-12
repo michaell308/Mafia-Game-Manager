@@ -49,6 +49,7 @@
         <script language="javascript" type="text/javascript" charset="utf-8">
             var socket;
             var gameName = "{{ name }}"
+            var username = "{{ username }}"
             var timeLeft = -100;
             $(document).ready(function() {
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
@@ -84,19 +85,15 @@
 
                     players = data['players']
                     game = data['game']
-                    username = data['username']
 
-
-                    if (game['phase'] == 'PREP')
-                    {
+                    if (game['phase'] == 'PREP') {
                         timeLeft = -1337
-                        buttonText = 'Toggle Ready'
+                        buttonText = 'Ready'
                         phaseString = 'Waiting for players ...'
-                    }else{
+                    } else {
                         timeLeft = game['timeLeft']
                         if(game['phase'] == 'DISCUSSION')
                         {
-
                             buttonText = 'Vote'
                             phaseString = 'Day: Chat away!'
                         }
@@ -104,7 +101,7 @@
                         {
                             buttonText = 'Lynch'
                             phaseString = 'Should we lynch '+ game['trialUser'] +'?' 
-                        } 
+                        }
                         else if(game['phase'] == 'NIGHT')
                         {
                             buttonText = 'Test'
@@ -123,7 +120,15 @@
                         } else if (game['phase'] == 'TRIAL') {
                             
                         }
-                        if(game['phase'] == 'PREP') readyString = ' (' + ((players[i].ready=='True') ? 'Ready!':'Not ready') + ')'
+                        if(game['phase'] == 'PREP'){
+                        	readyString = ' (' + ((players[i].ready=='True') ? 'Ready!':'Not ready') + ')'
+                        } 
+                        else
+                        {
+                        	if (username == players[i]['username']) {
+                        		$('#player-info').html(players[i].role)
+                        	}
+                        }
                         var content = '<div class="list-group-item"><span class="player-text">' + players[i]['username'] + 
                                         '</span><span class="row-text">' + votesString + readyString + votedForString+"</span>";
                         if (game['phase'] == 'PREP') {
@@ -132,11 +137,11 @@
                             }
                         } else if (game['phase'] == 'DISCUSSION') {
                             //if (username == players[i]['username']) {
-                                content += '<button type="button" class="btn btn-primary btn-success pull-right voteBtn">Vote</button>'
-                            //}
+                            content += '<button type="button" class="btn btn-primary btn-success pull-right voteBtn">Vote</button>'
                         } else if(game['phase'] == 'TRIAL') {
-                            if (players[i]['username'] == username)
+                            if (players[i]['username'] == game['trialUser'])
                                 content += '<button type="button" class="btn btn-primary btn-success pull-right voteBtn">Lynch</button>'
+                            //content += '<button type="button" class="btn btn-primary btn-success pull-right voteBtn">Heal</button>'
                         }
                         content += '</div>'
                         $('#users').append(content);
@@ -203,14 +208,12 @@
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <div class="panel panel-green">
-                        <div class="panel-heading">
-                            Other Stuff
+                        <div class="panel-heading" id="username-text">
+                            {{username}}
                         </div>
-                            <div class="small-body">
-                                <span class="pull-left"></span>
-                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                <div class="clearfix"></div>
-                            </div>
+                        <div class="panel-footer" id="player-info">
+                            
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
@@ -252,10 +255,10 @@
                 <div class="col-lg-7">
                     <div class="panel panel-default">
                         <div class="panel-heading">Game Chat</div>
-                        <div class="panel-body" id="chatbox" style="height:400px">
+                        <div class="panel-body" id="chatbox" style="height:400px; word-wrap:break-word;">
                         </div>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="textmessage">
+                            <input type="text" class="form-control" id="textmessage" maxlength="100">
                             <span class="input-group-btn">
                                 <button class="btn btn-default" type="button" onclick="sendMessage(document.getElementById('textmessage').value);">Send</button>
                             </span>

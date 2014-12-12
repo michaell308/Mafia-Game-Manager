@@ -24,6 +24,56 @@ class Game(object):
 		self.phase_duration = 0
 		self.trial_user = ''
 
+	def check_winner(self):
+		#0 mafia town wins
+		#0 town mafia wins
+		#1 town 1 mafia mafia wins
+		count_town = 0
+		count_mafia = 0
+		for player in self.players:
+			if player.is_mafioso(): count_mafia += 1
+			elif player.is_citizen(): count_town += 1
+		if count_town == 0 or (count_town == 1 and count_mafia == 1): 
+			return "Mafia"
+		elif count_mafia == 0: 
+			return "Town"
+		return None
+
+	def assign_roles(self):
+		rolesLess15 = ['Mafioso','Doctor','Sheriff','Citizen','Citizen','Mafioso','Citizen','Mafioso','Citizen','Citizen','Mafioso','Citizen','Citizen','Mafioso','Citizen']
+		rolesMore15 = ['Mafioso','Doctor','Sheriff','Citizen','Citizen','Mafioso','Citizen','Mafioso','Citizen','Citizen','Mafioso','Mafioso','Citizen','Mafioso','Doctor','Sheriff','Citizen','Citizen','Citizen']
+		rolesMore19 = ['Mafioso','Doctor','Sheriff','Citizen','Citizen','Mafioso','Citizen','Mafioso','Citizen','Citizen','Mafioso','Mafioso','Citizen','Mafioso','Doctor','Sheriff','Citizen','Mafioso','Sheriff','Doctor']
+		for player in self.players:
+			import random
+			
+			if (self.num_players < 15):
+				while True:
+					integer = int(random.random()*self.num_players)
+					player.role = rolesLess15[integer]
+					if(player.role == 'Mafioso'):
+						player.playerCanTalkAtNight = True
+					rolesLess15[integer]=''
+					if player.role != '':
+						break
+			elif (self.num_players > 19):
+				while True:
+					integer = int(random.random()*self.num_players)
+					player.role = rolesMore19[integer]
+					if(player.role == 'Mafioso'):
+						player.playerCanTalkAtNight = True
+					rolesMore19[integer] = ''
+					if player.role != '':
+						break
+			else:
+				while True:
+					integer = int(random.random()*self.num_players)
+					player.role = rolesMore15[integer]
+					if(player.role == 'Mafioso'):
+						player.playerCanTalkAtNight = True
+					rolesMore15[integer] = ''
+					if player.role != '':
+						break
+
 	def add_player(self,player):
 		self.players.append(player)
 		self.num_players += 1
@@ -69,6 +119,7 @@ class Game(object):
 	def start_game(self):
 		self.change_phase(120)
 		self.phase = 'DISCUSSION'
+		self.assign_roles()
 
 	def start_trial(self, token):
 		self.saved_discussion_time = self.time_left
@@ -80,7 +131,7 @@ class Game(object):
 			player.votes = 0
 
 	def continue_discussion(self):
-		self.change_phase(saved_discussion_time)
+		self.change_phase(self.saved_discussion_time)
 		self.phase = 'DISCUSSION'
 
 	def change_phase(self, duration):
@@ -91,10 +142,13 @@ class Game(object):
 	def tick(self):
 		if self.phase != 'PREP':
 			self.time_left = self.phase_duration - (time.time() - self.start_time)
-			print self.time_left
 			if self.time_left == 0:
 				if self.phase == 'DISCUSSION':
 					self.phase = 'NIGHT'
+	def clear_votes(self):
+		for i in self.players:
+			i.votes = 0
+			i.voted_for = ''
 
 class Player(object):
 	def __init__(self, token):
@@ -116,6 +170,15 @@ class Player(object):
 				}
 		return obj
 
+	def can_talk_at_night(self):
+		return self.role == 'Mafioso'
+
+	def is_mafioso(self):
+		return self.role == 'Mafioso'
+
+	def is_citizen(self):
+		return self.role == 'Doctor' or self.role == 'Citizen'
+
 
 def get_game(name):
 	return games[name]
@@ -124,4 +187,4 @@ def add_game(game):
 	games[game.name] = game
 
 add_game(Game("Game 1", 10))
-add_game(Game("Other game", 2))
+add_game(Game("Mkdir dat shit", 4))
